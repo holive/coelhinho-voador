@@ -22,6 +22,7 @@ main:fullscreen .game,main.viewport-fullscreen .game{width:100%;height:100%;min-
 main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fullscreen .controls,main.viewport-fullscreen .controls,main:fullscreen .footer,main.viewport-fullscreen .footer{display:none!important}
 @keyframes bob{50%{transform:translateY(-5px) rotate(4deg)}}
 @media(max-width:600px){body{padding:10px}.topline{margin:0 2px 8px}.brand-mark{font-size:24px}.subtitle{font-size:10px}.score{padding:6px 11px;font-size:13px}.mission{padding:5px 8px;font-size:11px}.combo-chip{padding:5px 8px;font-size:11px}.score span{font-size:16px}.game-shell{border-width:3px;border-radius:19px}.game-shell:after{border-radius:15px}.game{aspect-ratio:4/3}.card{padding:17px 16px 16px}.card .big{font-size:34px}.card h2{font-size:23px}.card p{font-size:13px;margin-bottom:12px}.play{font-size:16px;min-height:50px}.controls{font-size:12px;margin-top:12px}.desktop-tip{display:none}.mobile-tip{display:inline}.footer{font-size:10px}}
+@media(orientation:landscape) and (max-height:500px){main:fullscreen .topline,main.viewport-fullscreen .topline{gap:4px;margin:0 2px 4px}main:fullscreen .brand-mark,main.viewport-fullscreen .brand-mark{font-size:20px}main:fullscreen h1,main.viewport-fullscreen h1{font-size:17px}main:fullscreen .subtitle,main.viewport-fullscreen .subtitle{display:none}main:fullscreen .hud,main.viewport-fullscreen .hud{gap:4px!important}main:fullscreen .fullscreen-control,main.viewport-fullscreen .fullscreen-control{min-height:30px!important;padding:4px 6px;font-size:10px}main:fullscreen .combo-chip,main.viewport-fullscreen .combo-chip,main:fullscreen .mission,main.viewport-fullscreen .mission{padding:4px 6px;font-size:10px}main:fullscreen .score,main.viewport-fullscreen .score{padding:4px 6px;font-size:10px}main:fullscreen .score span,main.viewport-fullscreen .score span{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -51,6 +52,7 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
   const bass = [131, 0, 196, 0, 147, 0, 220, 0, 175, 0, 262, 0, 147, 0, 220, 0];
   let ctx = null, master = null, musicGain = null, muted = false;
   let playing = false, timer = 0, musicLoopActive = false, contextSync = null;
+  let resumePending = null, outputPrimed = false;
   let step = 0, nextAt = 0, button = null;
 
   function ensureContext() {
@@ -64,6 +66,21 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
       musicGain.connect(master); master.connect(ctx.destination);
       return ctx;
     } catch (_) { ctx = null; return null; }
+  }
+
+  // WebKit/iOS may require a source to be started during the trusted gesture
+  // as well as AudioContext.resume(). Keep this inaudible; it only initializes
+  // the output path and never bypasses the user's explicit Start/tap.
+  function primeOutputInGesture() {
+    if (!ctx || outputPrimed) return;
+    try {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = 1; gain.gain.value = 0;
+      osc.connect(gain); gain.connect(master);
+      osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (_) {} };
+      osc.start(0); osc.stop(ctx.currentTime + .04);
+      outputPrimed = true;
+    } catch (_) { /* resume() remains the primary unlock path */ }
   }
 
   function tone(freq, at, duration, type, volume, destination, endFreq) {
@@ -121,7 +138,13 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
       while (ctx) {
         if (playing) {
           if (ctx.state !== 'running') {
-            try { await ctx.resume(); } catch (_) { ok = false; }
+            try {
+              // unlock() calls resume synchronously in the user gesture and
+              // stores its promise here. Do not defer the first resume to a
+              // microtask on mobile Safari.
+              if (resumePending) await resumePending;
+              else await ctx.resume();
+            } catch (_) { ok = false; }
           }
           if (playing && ctx.state === 'running') startMusic();
         } else {
@@ -131,6 +154,10 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
           }
         }
         if ((playing && ctx.state === 'running') || (!playing && ctx.state === 'suspended')) break;
+        if (!playing && ctx.state !== 'running') break; // e.g. WebKit's OS-owned "interrupted" state
+        // `interrupted` is a WebKit lifecycle state. A gesture-driven unlock
+        // gets one resume attempt; don't spin forever if the OS keeps it stuck.
+        if (playing && ctx.state !== 'running') { ok = false; break; }
         if (!ok) break;
       }
       return ok && ctx.state === 'running';
@@ -142,9 +169,29 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
     return contextSync;
   }
 
-  async function unlock() {
-    if (!ensureContext()) return false;
-    return syncContext();
+  function unlock() {
+    if (!ensureContext()) return Promise.resolve(false);
+    // Both context creation and resume() happen synchronously in this call,
+    // before any await/then, so a click/touch activation remains available.
+    primeOutputInGesture();
+    if (ctx.state === 'running') {
+      if (playing) startMusic();
+      return Promise.resolve(true);
+    }
+    try {
+      const attempt = ctx.resume();
+      resumePending = Promise.resolve(attempt).then(() => {
+        resumePending = null;
+        if (playing && ctx.state === 'running') startMusic();
+        else if (!playing && ctx.state === 'running') syncContext();
+        return ctx.state === 'running';
+      }, () => { resumePending = null; return false; });
+      if (playing) syncContext();
+      return resumePending;
+    } catch (_) {
+      resumePending = null;
+      return Promise.resolve(false);
+    }
   }
 
   function setPlaying(value) {
@@ -198,7 +245,7 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
     button.type = 'button'; button.className = 'fullscreen-control audio-control';
     button.style.minHeight = '40px'; button.style.cursor = 'pointer';
     button.setAttribute('aria-pressed', 'false');
-    button.addEventListener('click', () => { toggleMuted(); if (!muted && playing) unlock(); });
+    button.addEventListener('click', () => { toggleMuted(); if (!muted && playing) { unlock(); setPlaying(true); } });
     setMuted(false);
     const anchor = document.getElementById('fullscreen');
     if (anchor && anchor.parentNode) anchor.insertAdjacentElement('afterend', button);
@@ -214,12 +261,14 @@ main:fullscreen .flight-control,main.viewport-fullscreen .flight-control,main:fu
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
+
 </script>
 <script>
 (()=>{
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),overlay=document.querySelector('#overlay'),play=document.querySelector('#play'),title=document.querySelector('#title'),message=document.querySelector('#message'),scoreEl=document.querySelector('#score'),carrotEl=document.querySelector('#carrots'),comboEl=document.querySelector('#combo'),gameShell=document.querySelector('.game-shell'),flight=document.querySelector('#flight'),fullscreen=document.querySelector('#fullscreen'),main=document.querySelector('main');
 let W=960,H=540,dpr=1,playing=false,hasStarted=false,held=false,last=0,time=0,score=0,combo=0,carrotCount=0,bunnyY=.49,vy=0,spin=0,tumbleLeft=0,tumbleDir=1,collisionCooldown=0,superTimer=0,slowTimer=0,notice='',noticeTime=0,starSeq=0,candyWait=3,candyBurst=0,candySpawn=0,ambientLast=performance.now(),clouds=[],stars=[],carrots=[],candies=[],particles=[],lions=[],floorX=0;
 const rand=(a,b)=>a+Math.random()*(b-a);
+function getVisualScale(){const dprScale=dpr||1,base=Math.min(W/960,H/540),touch=window.matchMedia?.('(pointer: coarse)').matches;if(!touch)return base;const cssHeight=H/dprScale,minCssScale=Math.min(.88,cssHeight/360);return Math.max(base,minCssScale*dprScale)}
 function audioControl(method,...args){const audio=window.CoelhinhoAudio;if(audio&&typeof audio[method]==='function'){try{return audio[method](...args)}catch(error){console.warn('Áudio indisponível:',error)}}}
 function resize(){const box=canvas.getBoundingClientRect(),oldW=W,oldH=H;dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(box.width*dpr);canvas.height=Math.round(box.height*dpr);W=canvas.width;H=canvas.height;const sx=W/oldW,sy=H/oldH;for(const item of [...clouds,...stars,...carrots,...candies,...particles,...lions]){if(Number.isFinite(item.x))item.x*=sx;if(Number.isFinite(item.y)&&item.y>1)item.y*=sy;if(Number.isFinite(item.vx))item.vx*=sx;if(Number.isFinite(item.vy))item.vy*=sy}vy*=sy;floorX*=sx;ctx.setTransform(1,0,0,1,0,0);draw()}
 new ResizeObserver(resize).observe(canvas); resize();
@@ -228,7 +277,7 @@ function start(){if(!hasStarted){reset();hasStarted=true}audioControl('unlock');
 play.addEventListener('click',start);
 function setHeld(v){held=v;flight.classList.toggle('active',v);if(!playing&&v){start();return}if(v){audioControl('unlock');audioControl('setPlaying',true)}}
 let activePointerId=null;
-function releaseHeld(e){if(e&&e.pointerId!==activePointerId)return;activePointerId=null;setHeld(false)}
+function releaseHeld(e){if(e&&e.pointerId!==undefined&&e.pointerId!==activePointerId)return;activePointerId=null;setHeld(false)}
 for(const target of [gameShell,flight]){target.addEventListener('contextmenu',e=>e.preventDefault());target.addEventListener('selectstart',e=>e.preventDefault())}document.addEventListener('contextmenu',e=>{if(e.target.closest?.('.fullscreen-control'))e.preventDefault()});
 gameShell.addEventListener('pointerdown',e=>{if(e.target.closest('button')||e.button!==0||!e.isPrimary||activePointerId!==null)return;e.preventDefault();activePointerId=e.pointerId;try{gameShell.setPointerCapture(e.pointerId)}catch{}setHeld(true)});gameShell.addEventListener('pointerup',releaseHeld);gameShell.addEventListener('pointercancel',releaseHeld);gameShell.addEventListener('lostpointercapture',releaseHeld);
 flight.addEventListener('pointerdown',e=>{if(e.button!==0||!e.isPrimary||activePointerId!==null)return;e.preventDefault();activePointerId=e.pointerId;try{flight.setPointerCapture(e.pointerId)}catch{}setHeld(true)});flight.addEventListener('pointerup',releaseHeld);flight.addEventListener('pointercancel',releaseHeld);flight.addEventListener('lostpointercapture',releaseHeld);
@@ -263,7 +312,7 @@ ctx.fillStyle='#ffd0c5';ctx.beginPath();ctx.ellipse(24,-4,6,4,0,0,7);ctx.fill();
 ctx.fillStyle='#f3b5ad';ctx.beginPath();ctx.ellipse(4,24,7,4,-.1,0,7);ctx.ellipse(18,17,7,4,.25,0,7);ctx.fill();
 // tiny scarf
 ctx.fillStyle='#ff9b78';ctx.beginPath();ctx.moveTo(-7,0);ctx.quadraticCurveTo(0,5,8,-1);ctx.lineTo(3,7);ctx.lineTo(0,14);ctx.lineTo(-3,7);ctx.fill();ctx.restore()}
-function draw(){const scale=Math.min(W/960,H/540);ctx.clearRect(0,0,W,H);const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#8ed9f4');sky.addColorStop(.68,'#d4f2ef');sky.addColorStop(1,'#fff1ce');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+function draw(){const scale=getVisualScale();ctx.clearRect(0,0,W,H);const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#8ed9f4');sky.addColorStop(.68,'#d4f2ef');sky.addColorStop(1,'#fff1ce');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
 // sun
 ctx.fillStyle='#fff3ad';ctx.beginPath();ctx.arc(W*.79,H*.19,H*.085,0,7);ctx.fill();ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.arc(W*.79,H*.19,H*.064,0,7);ctx.fill();
 // distant hills
@@ -289,7 +338,7 @@ function puff(x,y,items=['✨','💫','☁️']){for(let i=0;i<10;i++)particles.
 function celebrate(text){notice=text;noticeTime=1.8;puff(W*.25,bunnyY*H,['✨','⭐','💖'])}
 function updateCandy(dt){if(candyBurst<=0){candyWait-=dt;if(candyWait<=0){candyBurst=4.8;candySpawn=0;notice='CHUVA DE DOCES!';noticeTime=2}}if(candyBurst>0){candyBurst-=dt;candySpawn-=dt;if(candySpawn<=0){const colors=['#ff6f91','#63c7ed','#ffbf48','#9c83e8','#64c98b'];for(let i=0;i<2;i++)candies.push({x:rand(W*.08,W*.92),y:rand(-50,-10),vy:rand(165,225),vx:rand(-18,18),rot:rand(-.6,.6),spin:rand(-1.5,1.5),color:colors[Math.floor(rand(0,colors.length))]});candySpawn=rand(.42,.62)}if(candyBurst<=0){candyBurst=0;candyWait=11+rand(0,4)}}for(const c of candies){c.x+=c.vx*dt;c.y+=c.vy*dt;c.rot+=c.spin*dt}candies=candies.filter(c=>c.y<H+30)}
 function ambientLoop(now){const dt=Math.min(.05,(now-ambientLast)/1000);ambientLast=now;if(!playing){time+=dt;noticeTime=Math.max(0,noticeTime-dt);updateCandy(dt);draw()}requestAnimationFrame(ambientLoop)}
-function loop(now){if(!playing)return;const dt=Math.min(.04,(now-last)/1000);last=now;time+=dt;updateCandy(dt);const unit=W/960,verticalUnit=H/540,visualScale=Math.min(unit,verticalUnit);superTimer=Math.max(0,superTimer-dt);slowTimer=Math.max(0,slowTimer-dt);noticeTime=Math.max(0,noticeTime-dt);const speed=132*unit*(superTimer>0?1.38:slowTimer>0?0.58:1);comboEl.textContent=superTimer>0?'SUPER!':`${Math.min(combo,5)}/5`;floorX+=speed*dt;collisionCooldown=Math.max(0,collisionCooldown-dt);vy+=(held?-650:600)*verticalUnit*dt;vy=Math.max(-230*verticalUnit,Math.min(225*verticalUnit,vy));bunnyY+=vy*dt/H;if(bunnyY<.1){bunnyY=.1;vy=Math.max(0,vy)}if(bunnyY>.83){bunnyY=.83;vy=Math.min(0,vy)}
+function loop(now){if(!playing)return;const dt=Math.min(.04,(now-last)/1000);last=now;time+=dt;updateCandy(dt);const unit=W/960,verticalUnit=H/540,visualScale=getVisualScale();superTimer=Math.max(0,superTimer-dt);slowTimer=Math.max(0,slowTimer-dt);noticeTime=Math.max(0,noticeTime-dt);const speed=132*unit*(superTimer>0?1.38:slowTimer>0?0.58:1);comboEl.textContent=superTimer>0?'SUPER!':`${Math.min(combo,5)}/5`;floorX+=speed*dt;collisionCooldown=Math.max(0,collisionCooldown-dt);vy+=(held?-650:600)*verticalUnit*dt;vy=Math.max(-230*verticalUnit,Math.min(225*verticalUnit,vy));bunnyY+=vy*dt/H;if(bunnyY<.1){bunnyY=.1;vy=Math.max(0,vy)}if(bunnyY>.83){bunnyY=.83;vy=Math.min(0,vy)}
 for(const s of stars){s.x-=speed*dt;const sy=s.y*H+Math.sin(time*2+s.phase)*H*.025;if(!s.got&&!s.missed&&Math.hypot(s.x-W*.25,bunnyY*H-sy)<38*visualScale){s.got=true;score++;combo++;scoreEl.textContent=score;audioControl('effect','star');puff(s.x,sy,['✨','⭐']);if(combo>=5&&superTimer<=0){superTimer=5.5;combo=0;audioControl('effect','super');celebrate('SUPERCOELHO!')}}if(!s.got&&!s.missed&&s.x<W*.25-38*visualScale){s.missed=true;combo=0}if(s.x<-20){const farthest=Math.max(...stars.map(t=>t.x));s.x=farthest+68*unit;s.y=.49+Math.sin(starSeq*.52)*.25;s.phase=starSeq*.52;starSeq++;s.got=false;s.missed=false}}
 for(const c of carrots){c.x-=speed*dt;const cy=c.y*H+Math.sin(time*2+c.y*10)*H*.02;if(!c.got&&Math.hypot(c.x-W*.25,bunnyY*H-cy)<38*visualScale){c.got=true;carrotCount++;audioControl('effect','carrot');carrotEl.textContent=`${carrotCount}/3`;puff(c.x,cy,['🥕','✨']);if(carrotCount>=3){carrotCount=0;carrotEl.textContent='0/3';celebrate('DESAFIO COMPLETO!')} }if(c.x<-30){c.x=W+rand(W*.75,W*1.15);c.y=.48+Math.sin((time+c.x)*1.2)*.26;c.got=false}}
 let touchingCloud=false,touchingLion=null;for(const l of lions){l.x-=speed*dt;l.bite=Math.max(0,l.bite-dt);l.cooldown=Math.max(0,l.cooldown-dt);if(l.x<-70*visualScale){const farthest=Math.max(...lions.map(other=>other.x));l.x=farthest+W*rand(1.7,2.2)}const lionGround=Math.min(H*.9,H*.83+34*visualScale),lionCenterY=lionGround-34*visualScale,dx=l.x-W*.25,dy=lionCenterY-bunnyY*H;if(l.cooldown===0&&Math.abs(dx)<58*visualScale&&Math.abs(dy)<61*visualScale)touchingLion=l}for(const c of clouds){c.x-=speed*dt;if(c.x<-c.w*visualScale){c.x=W+rand(W*.6,W*1.05);c.y=rand(.22,.78);c.w=rand(44,70)}const dx=c.x-W*.25,dy=c.y*H-bunnyY*H;if(Math.abs(dx)<(c.w*.45+22)*visualScale&&Math.abs(dy)<(c.w*.24+22)*visualScale&&Math.abs(dx)<18*visualScale)touchingCloud=true}
