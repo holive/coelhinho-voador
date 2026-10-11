@@ -239,6 +239,7 @@ function exitViewportMode(){document.documentElement.classList.remove('viewport-
 fullscreen.addEventListener('click',async()=>{if(document.fullscreenElement){try{await document.exitFullscreen()}catch{exitViewportMode()}return}if(document.documentElement.classList.contains('viewport-fullscreen')){exitViewportMode();return}if(document.fullscreenEnabled!==false&&main.requestFullscreen){try{await main.requestFullscreen();return}catch{}}enterViewportMode()});document.addEventListener('fullscreenchange',syncFullscreen);syncFullscreen();
 function rr(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 function cloud(x,y,s,color='#fffdf3'){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,s*.45,s*.22,0,0,7);ctx.ellipse(x-s*.25,y-s*.07,s*.26,s*.22,0,0,7);ctx.ellipse(x+s*.13,y-s*.14,s*.29,s*.29,0,0,7);ctx.ellipse(x+s*.37,y-s*.02,s*.23,s*.18,0,0,7);ctx.fill()}
+function drawLightning(x,y,s){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#ffd45e';ctx.strokeStyle='#b98b35';ctx.lineWidth=1;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(-3,0);ctx.lineTo(4,0);ctx.lineTo(0,8);ctx.lineTo(5,8);ctx.lineTo(-5,20);ctx.lineTo(-2,11);ctx.lineTo(-7,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
 function lion(x,groundY,s,t,bite){
 ctx.save();ctx.translate(x,groundY);ctx.scale(s,s);const bob=Math.sin(t*8)*1.5;
 // Tail, body, and a swinging four-paw run cycle.
@@ -274,7 +275,7 @@ for(let i=0;i<22;i++){let x=((i*W/18-floorX)%(W+20)+W+20)%(W+20),y=H*(.91+(i%3)*
 for(const s of stars){if(s.got)continue;const y=s.y*H+Math.sin(time*2+s.phase)*H*.025;drawStar(s.x,y,11*scale);}
 for(const sweet of candies)drawCandy(sweet,scale);
 for(const c of carrots){if(!c.got){ctx.font=`${28*scale}px sans-serif`;ctx.fillText('🥕',c.x,c.y*H+Math.sin(time*2+c.y*10)*H*.02)}}
-for(const c of clouds)cloud(c.x,c.y*H,c.w*scale,c.color||'#fffdf3');const lionGround=Math.min(H*.9,H*.83+34*scale);for(const l of lions)lion(l.x,lionGround,scale,time+l.phase,l.bite);
+for(const c of clouds){const cloudSize=c.w*scale;cloud(c.x,c.y*H,cloudSize,'#d8e0e3');drawLightning(c.x+cloudSize*.2,c.y*H+cloudSize*.14,scale)}const lionGround=Math.min(H*.9,H*.83+34*scale);for(const l of lions)lion(l.x,lionGround,scale,time+l.phase,l.bite);
 // rainbow trail makes the temporary super mode easy to spot
 if(superTimer>0){const g=ctx.createLinearGradient(W*.1,0,W*.25,0);g.addColorStop(0,'#ff719f');g.addColorStop(.25,'#ffcb56');g.addColorStop(.5,'#7cdb9c');g.addColorStop(.75,'#71c9ff');g.addColorStop(1,'#bd8cff');ctx.strokeStyle=g;ctx.lineWidth=13*scale;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(W*.1,bunnyY*H+5*scale);ctx.quadraticCurveTo(W*.17,bunnyY*H-10*scale,W*.24,bunnyY*H);ctx.stroke()}
 // funny tumble spiral and bunny
