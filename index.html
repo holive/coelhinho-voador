@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#b9eafa" />
+<title>Coelhinho Voador</title>
+<style>
+:root{--ink:#31516a;--coral:#ff866f;--cream:#fff9e9;--sky:#bcecff}
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;font-family:'Trebuchet MS',ui-rounded,system-ui,sans-serif;color:var(--ink)}
+body{min-height:100svh;display:grid;place-items:center;background:radial-gradient(ellipse at 18% 10%,#fff4c7 0 8%,transparent 38%),linear-gradient(160deg,#e2f8ff,#fff8df 70%,#fce8d9);padding:clamp(12px,3vw,30px);overflow:hidden}
+main{width:min(100%,1000px);position:relative}.topline{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:0 8px 12px;gap:10px}.brand{display:flex;align-items:center;gap:10px}.brand-mark{font-size:30px;filter:drop-shadow(0 3px 0 #fff)}h1{font-size:clamp(20px,3vw,29px);line-height:1;margin:0;letter-spacing:-.04em;color:#32526a}.subtitle{font-size:12px;color:#69869a;margin-top:4px}.score{background:#fffdf3;border:2px solid #f6d998;border-radius:999px;padding:9px 15px;font-weight:800;box-shadow:0 4px 0 #e9cc8b;white-space:nowrap}.score span{color:#e5a62b;font-size:18px;margin-right:5px}.combo-chip{background:#fffdf3;border:2px solid #d7c7ec;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:900;box-shadow:0 4px 0 #c9b7df;white-space:nowrap}.combo-chip b{color:#9a65c0}.mission{background:#fffdf3;border:2px solid #bfe4bc;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:900;box-shadow:0 4px 0 #afd5a9;white-space:nowrap}.mission b{color:#5fa368}
+.game-shell{position:relative;border:5px solid #fffdf3;border-radius:28px;overflow:hidden;box-shadow:0 18px 45px #54839a30,0 6px 0 #d5e9e8;background:#bcecff;touch-action:none}.game-shell:after{content:"";position:absolute;inset:0;border:1px solid #ffffffa3;border-radius:22px;pointer-events:none}.game{width:100%;height:auto;aspect-ratio:16/9;display:block;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;background:linear-gradient(#dff7ff87,#fff5d65e);transition:opacity .25s}.overlay.hidden{opacity:0;pointer-events:none}.card{width:min(90%,430px);padding:23px 24px 20px;border-radius:26px;background:#fffdf3ed;border:3px solid #fff;box-shadow:0 8px 0 #e8d5a2,0 18px 38px #52718b26}.card .big{font-size:42px;display:block;animation:bob 2s ease-in-out infinite}.card h2{font-size:clamp(22px,4vw,32px);margin:3px 0 7px;letter-spacing:-.04em}.card p{font-size:15px;line-height:1.45;margin:0 0 16px;color:#56748b}.play{border:0;border-radius:999px;background:var(--coral);color:#fff;font:inherit;font-weight:900;font-size:18px;padding:14px 26px;min-height:54px;cursor:pointer;box-shadow:0 5px 0 #dc6858;transition:transform .12s,box-shadow .12s}.play:hover{transform:translateY(-2px);box-shadow:0 7px 0 #dc6858}.play:active{transform:translateY(3px);box-shadow:0 2px 0 #dc6858}.hint{font-size:12px;color:#7a94a3;margin-top:12px}.controls{display:flex;justify-content:center;align-items:center;gap:8px;margin:15px 4px 0;text-align:center;color:#58758a;font-size:14px;line-height:1.35}.key{display:inline-grid;place-items:center;min-width:29px;padding:3px 7px;background:#fff;border:1px solid #d6e8e8;border-radius:7px;box-shadow:0 2px 0 #c4d9dc;font-weight:800;color:#456579}.mobile-tip{display:none}.flight-control{display:none;width:min(100%,430px);min-height:58px;margin:14px auto 0;border:0;border-radius:999px;background:#ff866f;color:#fff;font:inherit;font-size:18px;font-weight:900;box-shadow:0 5px 0 #dc6858;touch-action:none;user-select:none;-webkit-user-select:none}.flight-control:active,.flight-control.active{transform:translateY(3px);box-shadow:0 2px 0 #dc6858}.flight-control.visible{display:block}.footer{display:flex;justify-content:center;gap:8px;align-items:center;margin-top:12px;color:#8196a0;font-size:11px}.footer .dot{width:6px;height:6px;background:#9bd6a6;border-radius:50%}
+@keyframes bob{50%{transform:translateY(-5px) rotate(4deg)}}
+@media(max-width:600px){body{padding:10px}.topline{margin:0 2px 8px}.brand-mark{font-size:24px}.subtitle{font-size:10px}.score{padding:6px 11px;font-size:13px}.mission{padding:5px 8px;font-size:11px}.combo-chip{padding:5px 8px;font-size:11px}.score span{font-size:16px}.game-shell{border-width:3px;border-radius:19px}.game-shell:after{border-radius:15px}.game{aspect-ratio:4/3}.card{padding:17px 16px 16px}.card .big{font-size:34px}.card h2{font-size:23px}.card p{font-size:13px;margin-bottom:12px}.play{font-size:16px;min-height:50px}.controls{font-size:12px;margin-top:12px}.desktop-tip{display:none}.mobile-tip{display:inline}.footer{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main>
+  <header class="topline"><div class="brand"><span class="brand-mark" aria-hidden="true">🐰</span><div><h1>Coelhinho Voador</h1><div class="subtitle">Um passeio fofinho pelas nuvens</div></div></div><div class="hud" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><div class="combo-chip">Sequência: <b id="combo">0/5</b></div><div class="mission" aria-live="polite">Desafio: <b id="carrots">0/3</b> 🥕</div><div class="score" aria-live="polite"><span>★</span><b id="score">0</b> estrelinhas</div></div></header>
+  <section class="game-shell" aria-label="Jogo Coelhinho Voador">
+    <canvas class="game" id="game" aria-label="Segure para voar e desvie das nuvens fofas"></canvas>
+    <div class="overlay" id="overlay"><div class="card"><span class="big" aria-hidden="true">🐰✨</span><h2 id="title">Vamos voar?</h2><p id="message">Junte 5 estrelas seguidas para virar Supercoelho e pegue 3 cenouras!</p><button class="play" id="play">Começar a aventura</button><div class="hint">É só segurar para subir e soltar para descer ☁️</div></div></div>
+  </section>
+  <button class="flight-control" id="flight" aria-label="Segure para o coelhinho subir">Segure para subir ☁️</button>
+  <div class="controls"><span class="desktop-tip"><span class="key">ESPAÇO</span> ou clique e segure para subir</span><span class="mobile-tip">Toque e segure para subir</span><span aria-hidden="true">·</span><span>solte para descer</span></div>
+  <div class="footer"><span class="dot"></span>Sem pressa: sempre dá para continuar brincando!</div>
+</main>
+<script>
+(()=>{
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),overlay=document.querySelector('#overlay'),play=document.querySelector('#play'),title=document.querySelector('#title'),message=document.querySelector('#message'),scoreEl=document.querySelector('#score'),carrotEl=document.querySelector('#carrots'),comboEl=document.querySelector('#combo');
+let W=960,H=540,dpr=1,playing=false,hasStarted=false,held=false,last=0,time=0,score=0,combo=0,carrotCount=0,bunnyY=.49,vy=0,spin=0,tumbleLeft=0,tumbleDir=1,collisionCooldown=0,superTimer=0,slowTimer=0,notice='',noticeTime=0,starSeq=0,clouds=[],stars=[],carrots=[],particles=[],floorX=0;
+const rand=(a,b)=>a+Math.random()*(b-a);
+function resize(){const box=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(box.width*dpr);canvas.height=Math.round(box.height*dpr);W=canvas.width;H=canvas.height;ctx.setTransform(1,0,0,1,0,0);draw()}
+new ResizeObserver(resize).observe(canvas); resize();
+function reset(){score=0;scoreEl.textContent='0';time=0;combo=0;carrotCount=0;carrotEl.textContent='0/3';comboEl.textContent='0/5';bunnyY=.49;vy=0;spin=0;tumbleLeft=0;collisionCooldown=0;superTimer=0;slowTimer=0;notice='';noticeTime=0;starSeq=0;clouds=[];stars=[];carrots=[];particles=[];for(let i=0;i<5;i++)clouds.push({x:W*(.92+i*.68),y:rand(.2,.8),w:rand(42,67)});for(let i=0;i<18;i++)stars.push({x:W*(.30+i*.11),y:.49+Math.sin(i*.52)*.25,phase:i*.52,got:false,missed:false});for(let i=0;i<3;i++)carrots.push({x:W*(1.18+i*.95),y:.48+Math.sin(i*1.35)*.26,got:false})}
+function start(){if(!hasStarted){reset();hasStarted=true}playing=true;overlay.classList.add('hidden');flight.classList.add('visible');last=performance.now();requestAnimationFrame(loop)}
+play.addEventListener('click',start);
+const flight=document.querySelector('#flight');
+function setHeld(v){held=v;flight.classList.toggle('active',v);if(!playing&&v)start()}
+flight.addEventListener('pointerdown',e=>{e.preventDefault();flight.setPointerCapture?.(e.pointerId);setHeld(true)});flight.addEventListener('pointerup',()=>setHeld(false));flight.addEventListener('pointercancel',()=>setHeld(false));flight.addEventListener('lostpointercapture',()=>setHeld(false));
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();canvas.setPointerCapture?.(e.pointerId);setHeld(true)});canvas.addEventListener('pointerup',()=>setHeld(false));canvas.addEventListener('pointercancel',()=>setHeld(false));canvas.addEventListener('lostpointercapture',()=>setHeld(false));
+window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(!e.repeat)setHeld(true)}if(e.code==='Escape'&&playing){playing=false;held=false;showEnd()}});window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowUp')setHeld(false)});window.addEventListener('blur',()=>held=false);
+function rr(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function cloud(x,y,s,color='#fffdf3'){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,s*.45,s*.22,0,0,7);ctx.ellipse(x-s*.25,y-s*.07,s*.26,s*.22,0,0,7);ctx.ellipse(x+s*.13,y-s*.14,s*.29,s*.29,0,0,7);ctx.ellipse(x+s*.37,y-s*.02,s*.23,s*.18,0,0,7);ctx.fill()}
+function bunny(x,y,r){ctx.save();ctx.translate(x,y);ctx.rotate(spin);ctx.scale(r,r);
+// shadow
+ctx.fillStyle='#5986a122';ctx.beginPath();ctx.ellipse(0,25,34,9,0,0,7);ctx.fill();
+// ears
+ctx.save();ctx.rotate(-.18);ctx.fillStyle='#fffdf6';ctx.beginPath();ctx.ellipse(-10,-33,8,29,-.16,0,7);ctx.ellipse(10,-37,8,31,.14,0,7);ctx.fill();ctx.fillStyle='#f5a6a7';ctx.beginPath();ctx.ellipse(-10,-34,3.5,21,-.16,0,7);ctx.ellipse(10,-38,3.5,22,.14,0,7);ctx.fill();ctx.restore();
+// body and head
+ctx.fillStyle='#fffdf6';ctx.beginPath();ctx.ellipse(-2,8,22,20,-.28,0,7);ctx.fill();ctx.beginPath();ctx.arc(7,-10,23,0,7);ctx.fill();ctx.beginPath();ctx.arc(-23,15,8,0,7);ctx.fill();
+// cheek / muzzle
+ctx.fillStyle='#ffd0c5';ctx.beginPath();ctx.ellipse(24,-4,6,4,0,0,7);ctx.fill();ctx.fillStyle='#405d70';ctx.beginPath();ctx.arc(14,-14,2.5,0,7);ctx.arc(27,-12,2.5,0,7);ctx.fill();ctx.fillStyle='#ec8f8e';ctx.beginPath();ctx.moveTo(20,-7);ctx.quadraticCurveTo(22,-10,24,-7);ctx.quadraticCurveTo(22,-3,20,-7);ctx.fill();ctx.strokeStyle='#7d7882';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(22,-4);ctx.quadraticCurveTo(22,0,18,0);ctx.moveTo(22,-4);ctx.quadraticCurveTo(23,0,27,0);ctx.stroke();
+// paws
+ctx.fillStyle='#f3b5ad';ctx.beginPath();ctx.ellipse(4,24,7,4,-.1,0,7);ctx.ellipse(18,17,7,4,.25,0,7);ctx.fill();
+// tiny scarf
+ctx.fillStyle='#ff9b78';ctx.beginPath();ctx.moveTo(-7,0);ctx.quadraticCurveTo(0,5,8,-1);ctx.lineTo(3,7);ctx.lineTo(0,14);ctx.lineTo(-3,7);ctx.fill();ctx.restore()}
+function draw(){const scale=Math.max(W/960,H/540);ctx.clearRect(0,0,W,H);const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#8ed9f4');sky.addColorStop(.68,'#d4f2ef');sky.addColorStop(1,'#fff1ce');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+// sun
+ctx.fillStyle='#fff3ad';ctx.beginPath();ctx.arc(W*.79,H*.19,H*.085,0,7);ctx.fill();ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.arc(W*.79,H*.19,H*.064,0,7);ctx.fill();
+// distant hills
+ctx.fillStyle='#b8dfc5';ctx.beginPath();ctx.moveTo(0,H*.8);ctx.quadraticCurveTo(W*.22,H*.58,W*.48,H*.79);ctx.quadraticCurveTo(W*.73,H*.58,W,H*.78);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();ctx.fillStyle='#91d0a5';ctx.beginPath();ctx.moveTo(0,H*.91);ctx.quadraticCurveTo(W*.28,H*.72,W*.56,H*.89);ctx.quadraticCurveTo(W*.77,H*.73,W,H*.9);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+for(let i=0;i<5;i++){let x=((i*W*.29-floorX*.24)%(W+130)+W+130)%(W+130)-35;cloud(x,H*(.15+(i%3)*.2),scale*(34+i%2*11),'#ffffffc9')}
+// ground flowers
+for(let i=0;i<22;i++){let x=((i*W/18-floorX)%(W+20)+W+20)%(W+20),y=H*(.91+(i%3)*.018);ctx.strokeStyle='#69b784';ctx.lineWidth=2*scale;ctx.beginPath();ctx.moveTo(x,y+4*scale);ctx.lineTo(x,y-5*scale);ctx.stroke();ctx.fillStyle=['#ffb9aa','#fff1a1','#e6b8ee'][i%3];ctx.beginPath();ctx.arc(x,y-6*scale,3.2*scale,0,7);ctx.fill()}
+// floating stars
+for(const s of stars){if(s.got)continue;const y=s.y*H+Math.sin(time*2+s.phase)*H*.025;drawStar(s.x,y,11*scale);}
+for(const c of carrots){if(!c.got){ctx.font=`${28*scale}px sans-serif`;ctx.fillText('🥕',c.x,c.y*H+Math.sin(time*2+c.y*10)*H*.02)}}
+for(const c of clouds)cloud(c.x,c.y*H,c.w*scale,c.color||'#fffdf3');
+// rainbow trail makes the temporary super mode easy to spot
+if(superTimer>0){const g=ctx.createLinearGradient(W*.1,0,W*.25,0);g.addColorStop(0,'#ff719f');g.addColorStop(.25,'#ffcb56');g.addColorStop(.5,'#7cdb9c');g.addColorStop(.75,'#71c9ff');g.addColorStop(1,'#bd8cff');ctx.strokeStyle=g;ctx.lineWidth=13*scale;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(W*.1,bunnyY*H+5*scale);ctx.quadraticCurveTo(W*.17,bunnyY*H-10*scale,W*.24,bunnyY*H);ctx.stroke()}
+// funny tumble spiral and bunny
+bunny(W*.25,bunnyY*H,scale*.83);
+if(noticeTime>0){ctx.fillStyle='#fffdf3';ctx.strokeStyle='#f2d98c';ctx.lineWidth=2*scale;ctx.font=`900 ${22*scale}px Trebuchet MS, sans-serif`;ctx.textAlign='center';ctx.lineWidth=5*scale;ctx.strokeText(notice,W*.5,H*.12);ctx.fillStyle='#31516a';ctx.fillText(notice,W*.5,H*.12);ctx.textAlign='start'}
+for(const p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.font=`${p.size*scale}px sans-serif`;ctx.fillText(p.text,p.x,p.y);ctx.globalAlpha=1}
+}
+function drawStar(x,y,r){ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(time*2+x)*.12);ctx.fillStyle='#ffcd53';ctx.strokeStyle='#fff7cf';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<10;i++){let a=-Math.PI/2+i*Math.PI/5,rad=i%2?r*.45:r;ctx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad)}ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
+function puff(x,y,items=['✨','💫','☁️']){for(let i=0;i<10;i++)particles.push({x,y,text:items[i%items.length],size:rand(14,27),life:1,vx:rand(-150,150),vy:rand(-180,25),color:'#fff4a9'})}
+function celebrate(text){notice=text;noticeTime=1.8;puff(W*.25,bunnyY*H,['✨','⭐','💖'])}
+function loop(now){if(!playing)return;const dt=Math.min(.04,(now-last)/1000);last=now;time+=dt;const unit=W/960;superTimer=Math.max(0,superTimer-dt);slowTimer=Math.max(0,slowTimer-dt);noticeTime=Math.max(0,noticeTime-dt);const speed=132*unit*(superTimer>0?1.38:slowTimer>0?0.58:1);comboEl.textContent=superTimer>0?'SUPER!':`${Math.min(combo,5)}/5`;floorX+=speed*dt;collisionCooldown=Math.max(0,collisionCooldown-dt);vy+=(held?-330:295)*unit*dt;vy=Math.max(-185*unit,Math.min(180*unit,vy));bunnyY+=vy*dt/H;if(bunnyY<.1){bunnyY=.1;vy=Math.max(0,vy)}if(bunnyY>.83){bunnyY=.83;vy=Math.min(0,vy)}
+for(const s of stars){s.x-=speed*dt;const sy=s.y*H+Math.sin(time*2+s.phase)*H*.025;if(!s.got&&!s.missed&&Math.hypot(s.x-W*.25,bunnyY*H-sy)<38*unit){s.got=true;score++;combo++;scoreEl.textContent=score;puff(s.x,sy,['✨','⭐']);if(combo>=5&&superTimer<=0){superTimer=5.5;combo=0;celebrate('SUPERCOELHO!')}}if(!s.got&&!s.missed&&s.x<W*.25-38*unit){s.missed=true;combo=0}if(s.x<-20){const farthest=Math.max(...stars.map(t=>t.x));s.x=farthest+68*unit;s.y=.49+Math.sin(starSeq*.52)*.25;s.phase=starSeq*.52;starSeq++;s.got=false;s.missed=false}}
+for(const c of carrots){c.x-=speed*dt;const cy=c.y*H+Math.sin(time*2+c.y*10)*H*.02;if(!c.got&&Math.hypot(c.x-W*.25,bunnyY*H-cy)<38*unit){c.got=true;carrotCount++;carrotEl.textContent=`${carrotCount}/3`;puff(c.x,cy,['🥕','✨']);if(carrotCount>=3){carrotCount=0;carrotEl.textContent='0/3';celebrate('DESAFIO COMPLETO!')} }if(c.x<-30){c.x=W+rand(W*.75,W*1.15);c.y=.48+Math.sin((time+c.x)*1.2)*.26;c.got=false}}
+let touchingCloud=false;for(const c of clouds){c.x-=speed*dt;if(c.x<-c.w*unit){c.x=W+rand(W*.6,W*1.05);c.y=rand(.22,.78);c.w=rand(44,70)}const dx=c.x-W*.25,dy=c.y*H-bunnyY*H;if(Math.abs(dx)<(c.w*.45+22)*unit&&Math.abs(dy)<(c.w*.24+22)*unit&&Math.abs(dx)<18*unit)touchingCloud=true}
+if(touchingCloud&&collisionCooldown===0){collisionCooldown=1.1;tumbleLeft=.8;tumbleDir=Math.random()<.5?-1:1;vy=-105*unit;combo=0;superTimer=0;slowTimer=2.8;puff(W*.25,bunnyY*H,['💫','☁️','😵'])}if(tumbleLeft>0){tumbleLeft=Math.max(0,tumbleLeft-dt);spin=tumbleDir*Math.PI*2*(1-tumbleLeft/.8)}else spin=0
+for(const p of particles){p.life-=dt*1.15;p.x+=p.vx*unit*dt;p.y+=p.vy*unit*dt;p.vy+=120*unit*dt}particles=particles.filter(p=>p.life>0);draw();requestAnimationFrame(loop)}
+function showEnd(){title.textContent='Pausa para um carinho?';message.textContent='As estrelinhas ficam guardadas. Quando quiser, é só voar de novo!';play.textContent='Continuar brincando';overlay.classList.remove('hidden')}
+})();
+</script>
+</body>
+</html>
